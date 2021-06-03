@@ -9,7 +9,7 @@ recall_macro = partial(recall_score, average="macro")
 
 
 def f1_mean(true, pred, labels):
-    """Macro (mean) F1 of 'favor' and 'against' classes."""
+    """Macro (mean) F1 of selected classes only."""
     return f1_score(true, pred, average=None, labels=labels).mean()
 
 

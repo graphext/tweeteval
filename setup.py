@@ -1,4 +1,5 @@
-from setuptools import setup
+#!/usr/bin/env python
+from setuptools import setup, find_packages
 
 setup(
     name="tweeteval",
@@ -8,11 +9,11 @@ setup(
     author="CardiffNLP",
     author_email=None,
     license=None,
-    packages=["tweeteval"],
-    install_requires=[
-        "scikit-learn",
-    ],
-    scripts=["scripts/tweeteval.py"],
+    packages=find_packages(),
+    install_requires=["scikit-learn", "typer"],
+    entry_points={
+        "console_scripts": ["tweeteval = tweeteval.cli:CLI"],
+    },
     include_package_data=True,
     zip_safe=False,
 )
