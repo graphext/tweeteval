@@ -1,1 +1,1 @@
-include tweeteval/resources
+recursive-include tweeteval/resources *
