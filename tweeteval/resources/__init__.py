@@ -45,11 +45,3 @@ def labels_(task, gold=True, pred_dir=PRED_DIR):
 
 task_labels = partial(labels_, gold=True)
 task_preds = partial(labels_, gold=False)
-
-
-def labels_and_preds(task):
-    """Loads gold labels and predictions for a task's test set."""
-    l, p = task_labels(task), task_preds(task)
-    if len(l) != len(p):
-        print(f"Length mismatch in {task=}")
-    return l, p

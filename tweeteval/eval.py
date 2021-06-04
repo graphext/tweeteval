@@ -2,7 +2,7 @@ from pathlib import Path
 from functools import partial
 from sklearn.metrics import f1_score, recall_score
 
-from .resources import labels_and_preds, TASKS, read_labels, task_labels, task_preds
+from .resources import TASKS, read_labels, task_labels, task_preds
 
 
 f1_macro = partial(f1_score, average="macro")
@@ -39,9 +39,7 @@ def ensure_labels(pred, task=None):
         elif pred.is_file():
             pred = read_labels(pred)
         else:
-            raise ValueError(
-                f"{pred} must be a file containing labels, or a directory containing a correctly named predictions file."
-            )
+            raise ValueError(f"{pred} must be a file containing labels, or a directory containing such a file.")
 
     return pred
 
