@@ -1,1 +1,1 @@
-# E.g.: tweeteval predictions tweeteval/resources/datasets/emoji/test_labels.txt emoji
+# E.g.: tweeteval task emoji tweeteval/resources/datasets/emoji/test_labels.txt

@@ -2,37 +2,39 @@ from pathlib import Path
 
 import typer
 
-from .resources import read_labels, task_labels, TASKS
-from .eval import published_results, SCORERS
+from .resources import PRED_DIR, TASKS
+from .eval import score
 
 
 CLI = typer.Typer()
 
 
 @CLI.command()
-def published():
-    """Simply prints published result of best model."""
-    typer.echo("Published:")
-    print(published_results())
+def task(task: str, pred: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=True, resolve_path=True)):
+    """Evaluates predictions in specified file against label for given task.
+
+    E.g.: the following should return a score of 1.0 exactly:
+
+        >> tweeteval task emoji tweeteval/resources/datasets/emoji/test_labels.txt
+
+    The pred argument can point to a file or a directory containing a file named after the task:
+
+        >> tweeteval task emoji tweeteval/resources/predictions
+    """
+    print(score(task, pred))
 
 
 @CLI.command()
-def predictions(file: Path, task: str):
-    """Evaluates predictions in specified file against label for given task.
+def all(
+    pred_dir: Path = typer.Argument(default=PRED_DIR, exists=True, file_okay=False, dir_okay=True, resolve_path=True)
+):
+    """Scores all predictions given a directory containing prediction files.
 
-    E.g.: the following should return a score of 1,0 exactly:
+    THe directory must have the same structure as  the repo's predictions/ folder.
+    E.g. the following both produce published results for the best model:
 
-        >> tweeteval predictions tweeteval/resources/datasets/emoji/test_labels.txt emoji
+        >> tweeteval all tweeteval/resources/predictions
+        >> tweeteval all
     """
-    if task not in TASKS:
-        typer.echo(f"Task must be one of: {TASKS}! Got '{task}'.")
-        raise typer.Exit(1)
-
-    pred = read_labels(file)
-    labels = task_labels(task)
-    if len(pred) != len(labels):
-        typer.echo(f"Predictions (n={len(pred)}) don't have correct length for selected task (n={len(labels)})!")
-        raise typer.Exit(1)
-
-    score = SCORERS[task](labels, pred)
-    print(score)
+    scores = {task: score(task, pred_dir) for task in TASKS}
+    print(scores)

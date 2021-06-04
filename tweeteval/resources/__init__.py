@@ -27,14 +27,16 @@ def read_labels(path):
     return open(path).read().split("\n")[:-1]
 
 
-def labels_(task, gold=True):
+def labels_(task, gold=True, pred_dir=PRED_DIR):
     """Returns the gold labels or predicted labels for a given task."""
+    pred_dir = Path(pred_dir)
+
     if task != "stance":
-        path = DATA_DIR / LABEL_FNM(task) if gold else PRED_DIR / PREDS_FNM(task)
+        path = DATA_DIR / LABEL_FNM(task) if gold else pred_dir / PREDS_FNM(task)
         return read_labels(path)
 
     labels = []
-    path = (DATA_DIR if gold else PRED_DIR) / task
+    path = (DATA_DIR if gold else pred_dir) / task
     for topic in STANCE_TOPICS:
         fnm = LABEL_FNM(topic) if gold else PREDS_FNM(topic)
         labels.extend(read_labels(path / fnm))

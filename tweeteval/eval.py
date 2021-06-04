@@ -1,7 +1,8 @@
+from pathlib import Path
 from functools import partial
 from sklearn.metrics import f1_score, recall_score
 
-from .resources import labels_and_preds, TASKS
+from .resources import labels_and_preds, TASKS, read_labels, task_labels, task_preds
 
 
 f1_macro = partial(f1_score, average="macro")
@@ -25,9 +26,34 @@ SCORERS = {
 """Metric to use for each task."""
 
 
-def published_results(tasks=TASKS):
-    """Results for best model in paper, i.e. RoBERTa re-trained on Twitter."""
-    if isinstance(tasks, str):
-        tasks = [tasks]
+def ensure_labels(pred, task=None):
+    """Ensures pred contains labels, reading from file if it points to data on disk."""
+    if isinstance(pred, str):
+        pred = Path(pred)
 
-    return {t: SCORERS[t](*labels_and_preds(t)) for t in tasks}
+    if isinstance(pred, Path):
+        if pred.is_dir():
+            if task is None:
+                raise ValueError("Need a task name to read labels from a directory!")
+            pred = task_preds(task=task, pred_dir=pred)
+        elif pred.is_file():
+            pred = read_labels(pred)
+        else:
+            raise ValueError(
+                f"{pred} must be a file containing labels, or a directory containing a correctly named predictions file."
+            )
+
+    return pred
+
+
+def score(task, pred):
+    """Return the score for a single task given a predictions file."""
+    if task not in TASKS:
+        raise ValueError(f"Task must be one of: {TASKS}! Got '{task}'.")
+
+    pred = ensure_labels(pred, task)
+    labels = task_labels(task)
+    if len(pred) != len(labels):
+        raise ValueError(f"Predictions (n={len(pred)}) don't have correct length for selected task (n={len(labels)})!")
+
+    return SCORERS[task](labels, pred)
