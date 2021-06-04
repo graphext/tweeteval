@@ -39,34 +39,91 @@ These are the seven datasets of TweetEval, with its corresponding labels (more d
 
 If you would like to have your results added to the leaderboard you can either submit a pull request or send an email to any of the paper authors with results and the predictions of your model. Please also submit a reference to a paper describing your approach.
 
+# Installation
+
+Simply install with pip
+
+```bash 
+pip install tweeteval
+``` 
+
+This will allow you to import and use tweeteval as a library as well as install a command line interface (an executable entry point) with the name `tweeteval`. 
 # Evaluating your system
 
+## Command line
 For evaluating your system, you simply need an individual predictions file for each of the tasks. The format of the predictions file should be the same as the output examples in the predictions folder (one output label per line as per the original test file). The predictions included as an example in this repo correspond to the best model evaluated in the paper, i.e., RoBERTa re-trained on Twitter (RoB-Rt in the paper).  
 
 ### Example usage
 
-```bash
-python evaluation_script.py
+The `tweeteval` CLI has the following commands:
+
+```bash 
+❯ tweeteval
+Usage: tweeteval [OPTIONS] COMMAND [ARGS]...
+
+Options:
+  --install-completion  Install completion for the current shell.
+  --show-completion     Show completion for the current shell, to copy it or
+                        customize the installation.
+
+  --help                Show this message and exit.
+
+Commands:
+  all   Scores all predictions given a directory containing prediction...
+  task  Evaluates predictions in specified file against label for given...
+
 ```
-The script takes the TweetEval gold test labels and the predictions from the "predictions" folder by default, but you can set this to suit your needs as optional arguments.
 
-### Optional arguments
+E.g. to evaluate the gold test labels against the predictions from the included "predictions" folder, for all tasks, simply call
 
-Three optional arguments can be modified: 
-
-*--tweeteval_path*: Path to TweetEval datasets. Default: *"./datasets/"*
-
-*--predictions_path*: Path to predictions directory. Default: *"./predictions/"*
-
-*--task*: Use this to get single task detailed results *(emoji|emotion|hate|irony|offensive|sentiment|stance)*. Default: ""
-
-Evaluation script sample usage from the terminal with parameters:
 
 ```bash
-python evaluation_script.py --tweeteval_path ./datasets/ --predictions_path ./predictions/ --task emoji
-```
-(this script would output the breakdown of the results for the emoji prediction task only)
+> tweeteval all
 
+{'emoji': 0.3155243507716184, 'emotion': 0.7982724123055319, 'hate': 0.5547114323640363, 'irony': 0.6247755834829443, 'offensive': 0.8155092112424851, 'stance': 0.7243628109019552}
+```
+
+To evaluate your own predictions, explicitly specify a folder matching the structure of this repo's predictions folder. E.g. the above is equivalent to
+
+```bash
+> tweeteval all tweeteval/resources/predictions
+```
+
+when executed in this repos base directory.
+
+To evaluate a single task use the `task` subcommand, e.g.
+
+```
+> tweeteval task emoji tweeteval/resources/predictions/emoji.txt
+0.3155243507716184
+```
+
+When a directory is passed instead of a file, the command will automatically look for a file named after the task, so the above is equivalent to
+
+```
+> tweeteval task emoji tweeteval/resources/predictions
+0.3155243507716184
+```
+
+## Use as library
+
+To integrate tweeteval benchmarks into a larger system, it may be more useful not to have to write and load predictions to and from disk or having to execute a command line tool. In this case you can use tweeteval's `score` function. E.g.
+
+``` python
+from tweeteval import resources, score
+
+task = "emoji"
+
+# This retrieves the predictions from the best model included in this repo
+preds = resources.task_preds(task)
+score(task, preds)
+```
+
+The `preds` argument of the `score` function accepts either
+
+- an iterable of prediction values
+- a filename containing such values (one per line)
+- a directory containing a file named after the specified task
 # Pre-trained models and code
 
 You can download the best Twitter masked language model (RoBERTa-retrained in the paper) from 🤗HuggingFace [here](https://huggingface.co/cardiffnlp/twitter-roberta-base). We also provide task-specific models:

@@ -30,7 +30,7 @@ def all(
 ):
     """Scores all predictions given a directory containing prediction files.
 
-    THe directory must have the same structure as  the repo's predictions/ folder.
+    THe directory must have the same structure as the repo's predictions/ folder.
     E.g. the following both produce published results for the best model:
 
         >> tweeteval all tweeteval/resources/predictions
