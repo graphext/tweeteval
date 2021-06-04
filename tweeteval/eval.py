@@ -13,7 +13,7 @@ def f1_mean(true, pred, labels):
     return f1_score(true, pred, average=None, labels=labels).mean()
 
 
-TASK_METRICS = {
+SCORERS = {
     "emoji": f1_macro,
     "emotion": f1_macro,
     "hate": f1_macro,
@@ -30,4 +30,4 @@ def published_results(tasks=TASKS):
     if isinstance(tasks, str):
         tasks = [tasks]
 
-    return {t: TASK_METRICS[t](*labels_and_preds(t)) for t in tasks}
+    return {t: SCORERS[t](*labels_and_preds(t)) for t in tasks}
