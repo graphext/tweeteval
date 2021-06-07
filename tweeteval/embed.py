@@ -35,9 +35,6 @@ class SpacyEmbedder(BaseEstimator, TransformerMixin):
         else:
             return np.vstack([d.vector for d in docs])
 
-    def __call__(self, X):
-        return self.transform(X)
-
 
 class TransformersEmbedder(BaseEstimator, TransformerMixin):
     """Embeds texts using a transformers model."""

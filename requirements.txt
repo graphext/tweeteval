@@ -1,0 +1,10 @@
+-find-links https://download.pytorch.org/whl/torch_stable.html
+pytest
+scikit-learn
+sentencepiece
+spacy
+torch==1.7.1+cpu; sys_platform != 'darwin'
+torch==1.7.1; sys_platform == 'darwin'
+transformers
+tqdm
+typer
