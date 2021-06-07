@@ -1,3 +1,4 @@
+"""Helpers to use different embeddings with a common sklearn interface."""
 import numpy as np
 import spacy
 from transformers import AutoTokenizer, AutoModel

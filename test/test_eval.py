@@ -33,6 +33,16 @@ def test_eval_task_tfidf(task=twee.Task.stance):
 
 
 @pytest.mark.xfail
+def test_eval_task_spacy(task=twee.Task.stance):
+    """Make sure the whole embedding->classifier pipeline works."""
+    embedder = embed.SpacyEmbedder(model="en_core_web_md")
+    model = SGDClassifier(loss="hinge", penalty="l2", alpha=1e-3, random_state=42, max_iter=5, tol=None)
+    pred, score = twee.eval_task(embedder, model, task)
+    print(f"{score=}")
+    assert score >= 0.6
+
+
+@pytest.mark.xfail
 def test_eval_task_trf(task=twee.Task.stance):
     """Make sure the whole embedding->classifier pipeline works."""
     embedder = embed.TransformersEmbedder(model="cardiffnlp/twitter-roberta-base")
