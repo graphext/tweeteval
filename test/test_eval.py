@@ -1,20 +1,10 @@
 """These are just some minimal examples to better illustrate tweeteval's API."""
 import pytest
 import numpy as np
-from sklearn.pipeline import make_pipeline
-from sklearn.decomposition import TruncatedSVD
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.preprocessing import Normalizer
 from sklearn.linear_model import SGDClassifier
 
 import tweeteval as twee
-
-
-def TfIdfEmbedder(tfidf_cfg=None, tsvd_cfg=None):
-    """Returns a pipeline applying TfIdf->SVD->Normalize."""
-    tfidf_cfg = tfidf_cfg or {}
-    tsvd_cfg = tsvd_cfg or {"n_components": 50}
-    return make_pipeline(TfidfVectorizer(**tfidf_cfg), TruncatedSVD(**tsvd_cfg), Normalizer(copy=False))
+from tweeteval import embed
 
 
 @pytest.mark.parametrize("task", twee.Task)
@@ -26,16 +16,26 @@ def test_score(task):
 def test_embedding(task=twee.Task.emotion):
     """Make sure embedders generate valid embeddings."""
     texts, _ = twee.task_data(task)
-    embedder = TfIdfEmbedder()
+    embedder = embed.TfIdfEmbedder()
     embeddings = embedder.fit_transform(texts)
     assert isinstance(embeddings, np.ndarray)
     assert embeddings.shape == (len(texts), 50)
 
 
 @pytest.mark.xfail
-def test_eval_task(task=twee.Task.stance):
+def test_eval_task_tfidf(task=twee.Task.stance):
     """Make sure the whole embedding->classifier pipeline works."""
-    embedder = TfIdfEmbedder()
+    embedder = embed.TfIdfEmbedder()
+    model = SGDClassifier(loss="hinge", penalty="l2", alpha=1e-3, random_state=42, max_iter=5, tol=None)
+    pred, score = twee.eval_task(embedder, model, task)
+    print(f"{score=}", flush=True)
+    assert score >= 0.6
+
+
+@pytest.mark.xfail
+def test_eval_task_trf(task=twee.Task.stance):
+    """Make sure the whole embedding->classifier pipeline works."""
+    embedder = embed.TransformersEmbedder(model="cardiffnlp/twitter-roberta-base")
     model = SGDClassifier(loss="hinge", penalty="l2", alpha=1e-3, random_state=42, max_iter=5, tol=None)
     pred, score = twee.eval_task(embedder, model, task)
     print(f"{score=}")

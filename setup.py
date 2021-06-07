@@ -10,9 +10,9 @@ setup(
     author_email=None,
     license=None,
     packages=find_packages(),
-    install_requires=["scikit-learn", "typer"],
+    install_requires=["scikit-learn", "typer", "tqdm"],
     extras_require={
-        "test": ["pytest"],
+        "test": ["pytest", "spacy", "transformers"],
     },
     entry_points={
         "console_scripts": ["tweeteval = tweeteval.cli:CLI"],
