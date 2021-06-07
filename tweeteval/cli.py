@@ -3,7 +3,7 @@ from typing import List, Optional
 
 import typer
 
-from .resources import PRED_DIR, TASKS
+from .resources import PRED_DIR, Task
 from .eval import score
 
 
@@ -11,7 +11,10 @@ CLI = typer.Typer()
 
 
 @CLI.command()
-def task(task: str, pred: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=True, resolve_path=True)):
+def task(
+    task: Task = typer.Argument(..., case_sensitive=False),
+    pred: Path = typer.Argument(default=PRED_DIR, exists=True, file_okay=True, dir_okay=True, resolve_path=True),
+):
     """Evaluates predictions in specified file against label for given task.
 
     E.g.: the following should return a score of 1.0 exactly:
@@ -22,7 +25,7 @@ def task(task: str, pred: Path = typer.Argument(..., exists=True, file_okay=True
 
     >> tweeteval task emoji tweeteval/resources/predictions
     """
-    print(score(task, pred))
+    print(score(pred, task))
 
 
 @CLI.command()
@@ -37,24 +40,24 @@ def all(
     >> tweeteval all tweeteval/resources/predictions
     >> tweeteval all
     """
-    scores = {task: score(task, pred_dir) for task in TASKS}
+    scores = {task.name: score(pred_dir, task) for task in Task}
     print(scores)
 
 
 @CLI.command()
 def tasks(
     pred: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=True, resolve_path=True),
-    tasks: Optional[List[str]] = typer.Option(None, "--task", "-t"),
+    tasks: Optional[List[Task]] = typer.Option(None, "--task", "-t", case_sensitive=False),
 ):
     """Evaluate all or a subset of tasks using the --task (-t) option.
 
-    >> tweeteval tasks tweeteval/resources/predictions -t emoji -t emotion
+    >> tweeteval tasks -t emoji -t emotion tweeteval/resources/predictions
     """
     if not tasks:
-        tasks = TASKS
+        tasks = Task
     else:
-        if any(t not in TASKS for t in tasks):
-            typer.echo(f"Each task must be one of {TASKS}! Got {tasks}.")
+        if any(t not in Task for t in tasks):
+            typer.echo(f"Each task must be one of {list(Task)}! Got {tasks}.")
             typer.Exit(1)
 
     if len(tasks) > 1 and not pred.is_dir():
@@ -65,5 +68,5 @@ def tasks(
             )
         )
 
-    scores = {task: score(task, pred) for task in tasks}
+    scores = {task.name: score(pred, task) for task in tasks}
     print(scores)

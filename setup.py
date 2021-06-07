@@ -11,6 +11,9 @@ setup(
     license=None,
     packages=find_packages(),
     install_requires=["scikit-learn", "typer"],
+    extras_require={
+        "test": ["pytest"],
+    },
     entry_points={
         "console_scripts": ["tweeteval = tweeteval.cli:CLI"],
     },

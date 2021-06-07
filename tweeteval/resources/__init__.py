@@ -1,14 +1,31 @@
 from pathlib import Path
 from functools import partial
+from enum import Enum
+
+
+class Task(Enum):
+    emoji = "emoji"
+    emotion = "emotion"
+    hate = "hate"
+    irony = "irony"
+    offensive = "offensive"
+    # sentiment = "sentiment"  # pred and label size mismatch
+    stance = "stance"
+
+
+class StanceTopic(Enum):
+    abortion = "abortion"
+    atheism = "atheism"
+    climate = "climate"
+    feminist = "feminist"
+    hillary = "hillary"
+
 
 THISDIR = Path(__file__).parent.absolute()
 
-TASKS = ["emoji", "emotion", "hate", "irony", "offensive", "stance"]  # "sentiment" # pred and label size mismatch
-STANCE_TOPICS = ["abortion", "atheism", "climate", "feminist", "hillary"]
-
 
 def resource_path(to=None):
-    """Get the absolute path to a file in this packages /resources folder."""
+    """Get the absolute path to a file in this package's /resources folder."""
     path = THISDIR
     if to is not None:
         path /= to
@@ -22,26 +39,37 @@ PREDS_FNM = "{}.txt".format
 """Convenient pre-defined paths."""
 
 
-def read_labels(path):
+def readlines(path):
     """Read a labels file and return a list of labels."""
-    return open(path).read().split("\n")[:-1]
+    with open(path) as f:
+        return f.read().split("\n")[:-1]
+
+
+def task_data(task: Task, split="train"):
+    """Get texts and corresponding labels for the given task and split."""
+    topics = [t.name for t in StanceTopic] if task == Task.stance else [""]
+    texts, labels = [], []
+    for topic in topics:
+        texts.extend(readlines(DATA_DIR / task.name / topic / f"{split}_text.txt"))
+        labels.extend(readlines(DATA_DIR / task.name / topic / f"{split}_labels.txt"))
+    return texts, labels
 
 
 def labels_(task, gold=True, pred_dir=PRED_DIR):
     """Returns the gold labels or predicted labels for a given task."""
     pred_dir = Path(pred_dir)
 
-    if task != "stance":
-        path = DATA_DIR / LABEL_FNM(task) if gold else pred_dir / PREDS_FNM(task)
-        return read_labels(path)
+    if task != Task.stance:
+        path = DATA_DIR / LABEL_FNM(task.name) if gold else pred_dir / PREDS_FNM(task.name)
+        return readlines(path)
 
     labels = []
-    path = (DATA_DIR if gold else pred_dir) / task
-    for topic in STANCE_TOPICS:
-        fnm = LABEL_FNM(topic) if gold else PREDS_FNM(topic)
-        labels.extend(read_labels(path / fnm))
+    path = (DATA_DIR if gold else pred_dir) / task.name
+    for topic in StanceTopic:
+        fnm = LABEL_FNM(topic.name) if gold else PREDS_FNM(topic.name)
+        labels.extend(readlines(path / fnm))
     return labels
 
 
-task_labels = partial(labels_, gold=True)
-task_preds = partial(labels_, gold=False)
+test_labels = partial(labels_, gold=True)
+test_preds = partial(labels_, gold=False)

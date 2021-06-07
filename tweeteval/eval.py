@@ -1,8 +1,12 @@
 from pathlib import Path
 from functools import partial
+from numbers import Number
+from typing import Iterable, Optional
+
+from sklearn.base import ClassifierMixin, TransformerMixin
 from sklearn.metrics import f1_score, recall_score
 
-from .resources import TASKS, read_labels, task_labels, task_preds
+from .resources import Task, readlines, task_data, test_labels, test_preds
 
 
 f1_macro = partial(f1_score, average="macro")
@@ -15,18 +19,18 @@ def f1_mean(true, pred, labels):
 
 
 SCORERS = {
-    "emoji": f1_macro,
-    "emotion": f1_macro,
-    "hate": f1_macro,
-    "irony": lambda t, p: f1_mean(t, p, labels=["1"]),
-    "offensive": f1_macro,
-    "sentiment": recall_macro,
-    "stance": lambda t, p: f1_mean(t, p, labels=["1", "2"]),
+    Task.emoji: f1_macro,
+    Task.emotion: f1_macro,
+    Task.hate: f1_macro,
+    Task.irony: lambda t, p: f1_mean(t, p, labels=["1"]),
+    Task.offensive: f1_macro,
+    # Task.sentiment: recall_macro,
+    Task.stance: lambda t, p: f1_mean(t, p, labels=["1", "2"]),
 }
 """Metric to use for each task."""
 
 
-def ensure_labels(pred, task=None):
+def ensure_labels(pred: Iterable, task: Optional[Task] = None) -> Iterable:
     """Ensures pred contains labels, reading from file if it points to data on disk."""
     if isinstance(pred, str):
         pred = Path(pred)
@@ -35,23 +39,34 @@ def ensure_labels(pred, task=None):
         if pred.is_dir():
             if task is None:
                 raise ValueError("Need a task name to read labels from a directory!")
-            pred = task_preds(task=task, pred_dir=pred)
+            pred = test_preds(task=task, pred_dir=pred)
         elif pred.is_file():
-            pred = read_labels(pred)
+            pred = readlines(pred)
         else:
             raise ValueError(f"{pred} must be a file containing labels, or a directory containing such a file.")
 
     return pred
 
 
-def score(task, pred):
-    """Return the score for a single task given a predictions file."""
-    if task not in TASKS:
-        raise ValueError(f"Task must be one of: {TASKS}! Got '{task}'.")
-
+def score(pred: Iterable, task: Task) -> Number:
+    """Return the score for a single task given predictions for test split."""
     pred = ensure_labels(pred, task)
-    labels = task_labels(task)
+    labels = test_labels(task)
     if len(pred) != len(labels):
         raise ValueError(f"Predictions (n={len(pred)}) don't have correct length for selected task (n={len(labels)})!")
 
     return SCORERS[task](labels, pred)
+
+
+def eval_task(embedder: TransformerMixin, model: ClassifierMixin, task: Task):
+    """Given sklearn-compatible embedder and classification model, evaluate both on tweeteval task."""
+    texts_train, y_train = task_data(task, split="train")
+    texts_test, y_test = task_data(task, split="test")
+
+    emb_train = embedder.fit_transform(texts_train)
+    emb_test = embedder.transform(texts_test)
+
+    model = model.fit(emb_train, y_train)
+    y_pred = model.predict(emb_test)
+    s = SCORERS[task](y_test, y_pred)
+    return y_pred, s
