@@ -7,6 +7,7 @@ from sklearn.base import ClassifierMixin, TransformerMixin
 from sklearn.metrics import f1_score, recall_score
 
 from .resources import Task, readlines, task_data, test_labels, test_preds
+from .utils import preprocess
 
 
 f1_macro = partial(f1_score, average="macro")
@@ -48,15 +49,6 @@ def ensure_labels(pred: Iterable, task: Optional[Task] = None) -> Iterable:
     return pred
 
 
-def preprocess(text):
-    new_text = []
-    for t in text.split(" "):
-        t = "@user" if t.startswith("@") and len(t) > 1 else t
-        t = "http" if t.startswith("http") else t
-        new_text.append(t)
-    return " ".join(new_text)
-
-
 def score(pred: Iterable, task: Task) -> Number:
     """Return the score for a single task given predictions for test split."""
     pred = ensure_labels(pred, task)
@@ -67,19 +59,20 @@ def score(pred: Iterable, task: Task) -> Number:
     return SCORERS[task](labels, pred)
 
 
-def eval_task(embedder: TransformerMixin, model: ClassifierMixin, task: Task, preprocess=True):
+def eval_classifier(clf: ClassifierMixin, task: Task, preproc=True, embedder: Optional[TransformerMixin] = None):
     """Given sklearn-compatible embedder and classification model, evaluate both on tweeteval task."""
-    texts_train, y_train = task_data(task, split="train")
-    texts_test, y_test = task_data(task, split="test")
+    X_train, y_train = task_data(task, split="train")
+    X_test, y_test = task_data(task, split="test")
 
-    if preprocess:
-        texts_train = [preprocess(t) for t in texts_train]
-        texts_test = [preprocess(t) for t in texts_test]
+    if preproc:
+        X_train = [preprocess(txt) for txt in X_train]
+        X_test = [preprocess(txt) for txt in X_test]
 
-    emb_train = embedder.fit_transform(texts_train)
-    emb_test = embedder.transform(texts_test)
+    if embedder:
+        X_train = embedder.fit_transform(X_train)
+        X_test = embedder.transform(X_test)
 
-    model = model.fit(emb_train, y_train)
-    y_pred = model.predict(emb_test)
+    model = clf.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
     s = SCORERS[task](y_test, y_pred)
-    return y_pred, s
+    return s, y_pred
