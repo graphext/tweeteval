@@ -24,7 +24,7 @@ SCORERS = {
     Task.hate: f1_macro,
     Task.irony: lambda t, p: f1_mean(t, p, labels=["1"]),
     Task.offensive: f1_macro,
-    # Task.sentiment: recall_macro,
+    Task.sentiment: recall_macro,
     Task.stance: lambda t, p: f1_mean(t, p, labels=["1", "2"]),
 }
 """Metric to use for each task."""
@@ -48,7 +48,7 @@ def ensure_labels(pred: Iterable, task: Optional[Task] = None) -> Iterable:
     return pred
 
 
-def preprocess_text(text):
+def preprocess(text):
     new_text = []
     for t in text.split(" "):
         t = "@user" if t.startswith("@") and len(t) > 1 else t
@@ -73,8 +73,8 @@ def eval_task(embedder: TransformerMixin, model: ClassifierMixin, task: Task, pr
     texts_test, y_test = task_data(task, split="test")
 
     if preprocess:
-        texts_train = [preprocess_text(t) for t in texts_train]
-        texts_test = [preprocess_text(t) for t in texts_test]
+        texts_train = [preprocess(t) for t in texts_train]
+        texts_test = [preprocess(t) for t in texts_test]
 
     emb_train = embedder.fit_transform(texts_train)
     emb_test = embedder.transform(texts_test)
