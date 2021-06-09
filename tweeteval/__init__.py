@@ -4,7 +4,7 @@ from . import classify
 
 from .evaluate import preprocess, score, eval_classifier, SCORERS
 from .resources import Task, StanceTopic, task_data, test_labels, test_preds, map_labels
-from .classify import PretrainedCardiffClassifier
+from .classify import PretrainedCardiffClassifier, TfidfLogreg
 
 __all__ = [
     evaluate,
@@ -21,4 +21,5 @@ __all__ = [
     test_preds,
     map_labels,
     PretrainedCardiffClassifier,
+    TfidfLogreg,
 ]
