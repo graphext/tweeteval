@@ -2,6 +2,8 @@ from pathlib import Path
 from functools import partial
 from enum import Enum
 
+import pandas as pd
+
 
 class Task(Enum):
     emoji = "emoji"
@@ -94,3 +96,10 @@ def labels_(task, gold=True, pred_dir=PRED_DIR, humanize=False):
 
 test_labels = partial(labels_, gold=True)
 test_preds = partial(labels_, gold=False)
+
+
+def published_scores():
+    fnm = resource_path(to="results.csv")
+    df = pd.read_csv(fnm)
+    df = df.set_index("Model")
+    return df

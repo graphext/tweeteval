@@ -23,10 +23,10 @@ SCORERS = {
     Task.emoji: f1_macro,
     Task.emotion: f1_macro,
     Task.hate: f1_macro,
-    Task.irony: lambda t, p: f1_mean(t, p, labels=["1"]),
+    Task.irony: lambda t, p: f1_mean(t, p, labels=["1"] if "1" in t else ["irony"]),
     Task.offensive: f1_macro,
     Task.sentiment: recall_macro,
-    Task.stance: lambda t, p: f1_mean(t, p, labels=["1", "2"]),
+    Task.stance: lambda t, p: f1_mean(t, p, labels=["1", "2"] if "1" in t else ["against", "favor"]),
 }
 """Metric to use for each task."""
 
